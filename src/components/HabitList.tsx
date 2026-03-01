@@ -135,8 +135,8 @@ export function HabitList() {
   };
 
   return (
-    <div className="max-w-5xl mx-auto p-4 sm:p-6 lg:p-8 flex flex-col gap-8">
-      <header className="flex items-center justify-between gap-3 border-b border-zinc-200 dark:border-zinc-800 pb-4 sm:pb-6">
+    <div className="max-w-5xl mx-auto p-4 sm:p-6 lg:p-8 flex flex-col gap-4">
+      <header className="flex items-center justify-between gap-3 border-b border-zinc-200 dark:border-zinc-800 pb-4 sm:pb-4">
         <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100 whitespace-nowrap">
           Habit Tracker
         </h1>
@@ -276,7 +276,7 @@ export function HabitList() {
         </div>
       </header>
 
-      <div className="flex flex-col gap-8">
+      <div className="flex flex-col gap-4">
         {habits.length === 0 ? (
           <div className="text-center py-12 text-zinc-500 dark:text-zinc-400">
             No habits yet. Add one above to get started!
