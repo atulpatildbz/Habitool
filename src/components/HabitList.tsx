@@ -1,7 +1,8 @@
 import { useHabits, Habit } from '../hooks/useHabits';
 import { ContributionGraph } from './ContributionGraph';
+import { RecentDaysGraph } from './RecentDaysGraph';
 import { CalendarView } from './CalendarView';
-import { Plus, Trash2, Check, Flame, Settings2, Pencil, MoreVertical, icons } from 'lucide-react';
+import { Plus, Trash2, Check, Flame, Settings2, Pencil, MoreVertical, ChevronUp, icons } from 'lucide-react';
 import { useState, FormEvent, useMemo, useEffect, useDeferredValue, UIEvent } from 'react';
 import { cn } from '../lib/utils';
 import { calculateStreaks } from '../lib/streaks';
@@ -26,6 +27,10 @@ const VALID_ICONS = Object.keys(icons).filter(name => {
   return true;
 });
 
+const RECENT_DAY_OPTIONS = [2, 3, 4, 5, 6, 7] as const;
+type RecentDayOption = (typeof RECENT_DAY_OPTIONS)[number];
+type GraphViewMode = 'year' | 'recent';
+
 export function HabitList() {
   const { habits, logs, addHabit, deleteHabit, updateHabit, toggleHabitDate, updateHabitDate } = useHabits();
   const [newHabitName, setNewHabitName] = useState('');
@@ -42,6 +47,8 @@ export function HabitList() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState<'add' | 'edit'>('add');
   const [editingHabitId, setEditingHabitId] = useState<string | null>(null);
+  const [graphViewMode, setGraphViewMode] = useState<GraphViewMode>('year');
+  const [recentDays, setRecentDays] = useState<RecentDayOption>(5);
 
   useEffect(() => {
     fetch('https://unpkg.com/lucide-static@latest/tags.json')
@@ -135,7 +142,7 @@ export function HabitList() {
   };
 
   return (
-    <div className="max-w-5xl mx-auto p-4 sm:p-6 lg:p-8 flex flex-col gap-4">
+    <div className="max-w-5xl mx-auto p-4 pb-32 sm:p-6 sm:pb-32 lg:p-8 lg:pb-36 flex flex-col gap-4">
       <header className="flex items-center justify-between gap-3 border-b border-zinc-200 dark:border-zinc-800 pb-4 sm:pb-4">
         <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100 whitespace-nowrap">
           Habit Tracker
@@ -305,7 +312,12 @@ export function HabitList() {
                   <div 
                     className="bg-white dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-800 p-4 sm:p-6 shadow-sm overflow-hidden cursor-pointer transition-colors hover:border-zinc-300 dark:hover:border-zinc-700"
                   >
-                    <div className="flex items-center justify-between gap-2 sm:gap-4 mb-4 sm:mb-6">
+                    <div
+                      className={cn(
+                        "flex items-center justify-between gap-2 sm:gap-4",
+                        graphViewMode === 'recent' ? "mb-3 sm:mb-4" : "mb-4 sm:mb-6"
+                      )}
+                    >
                       <div className="flex items-center gap-3 sm:gap-4 min-w-0 flex-1">
                         <div 
                           className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl shrink-0 flex items-center justify-center" 
@@ -408,11 +420,20 @@ export function HabitList() {
                     </div>
                     
                     <div onClick={(e) => { e.stopPropagation(); e.preventDefault(); }}>
-                      <ContributionGraph
-                        habit={habit}
-                        logs={logs[habit.id] || {}}
-                        onToggleDate={(date) => toggleHabitDate(habit.id, date, habitTarget)}
-                      />
+                      {graphViewMode === 'year' ? (
+                        <ContributionGraph
+                          habit={habit}
+                          logs={logs[habit.id] || {}}
+                          onToggleDate={(date) => toggleHabitDate(habit.id, date, habitTarget)}
+                        />
+                      ) : (
+                        <RecentDaysGraph
+                          habit={habit}
+                          logs={logs[habit.id] || {}}
+                          days={recentDays}
+                          onToggleDate={(date) => toggleHabitDate(habit.id, date, habitTarget)}
+                        />
+                      )}
                     </div>
                   </div>
                 </DialogTrigger>
@@ -429,6 +450,80 @@ export function HabitList() {
             );
           })
         )}
+      </div>
+
+      <div
+        className="fixed left-1/2 -translate-x-1/2 z-40"
+        style={{ bottom: 'calc(env(safe-area-inset-bottom) + 12px)' }}
+      >
+        <Popover>
+          <PopoverTrigger asChild>
+            <button
+              type="button"
+              className="inline-flex items-center gap-2 rounded-full border border-zinc-200 dark:border-zinc-700 bg-white/95 dark:bg-zinc-900/95 px-4 py-2.5 shadow-lg backdrop-blur-md"
+              aria-label="Open view options"
+            >
+              <span className="text-sm font-medium text-zinc-900 dark:text-zinc-100">
+                {graphViewMode === 'year' ? 'Year View' : `Last ${recentDays} days`}
+              </span>
+              <ChevronUp size={16} className="text-zinc-500 dark:text-zinc-400" />
+            </button>
+          </PopoverTrigger>
+          <PopoverContent side="top" align="center" className="w-[min(92vw,320px)] rounded-2xl p-3">
+            <div className="space-y-3">
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  onClick={() => setGraphViewMode('year')}
+                  className={cn(
+                    "px-3 py-2 text-sm rounded-lg border transition-colors",
+                    graphViewMode === 'year'
+                      ? "border-zinc-900 bg-zinc-900 text-white dark:border-zinc-100 dark:bg-zinc-100 dark:text-zinc-900"
+                      : "border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800"
+                  )}
+                >
+                  Year
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setGraphViewMode('recent')}
+                  className={cn(
+                    "px-3 py-2 text-sm rounded-lg border transition-colors",
+                    graphViewMode === 'recent'
+                      ? "border-zinc-900 bg-zinc-900 text-white dark:border-zinc-100 dark:bg-zinc-100 dark:text-zinc-900"
+                      : "border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800"
+                  )}
+                >
+                  Last X Days
+                </button>
+              </div>
+
+              <div className="space-y-1.5">
+                <div className="text-xs text-zinc-500 dark:text-zinc-400">Day window (2-7)</div>
+                <div className="grid grid-cols-6 gap-1.5">
+                  {RECENT_DAY_OPTIONS.map((days) => (
+                    <button
+                      key={days}
+                      type="button"
+                      onClick={() => {
+                        setRecentDays(days);
+                        setGraphViewMode('recent');
+                      }}
+                      className={cn(
+                        "py-1.5 text-xs rounded-md border transition-colors",
+                        graphViewMode === 'recent' && recentDays === days
+                          ? "border-zinc-900 bg-zinc-900 text-white dark:border-zinc-100 dark:bg-zinc-100 dark:text-zinc-900"
+                          : "border-zinc-200 dark:border-zinc-700 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800"
+                      )}
+                    >
+                      {days}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </PopoverContent>
+        </Popover>
       </div>
     </div>
   );
