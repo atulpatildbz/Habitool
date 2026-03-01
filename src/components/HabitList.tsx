@@ -136,16 +136,20 @@ export function HabitList() {
 
   return (
     <div className="max-w-5xl mx-auto p-4 sm:p-6 lg:p-8 flex flex-col gap-8">
-      <header className="flex flex-wrap items-center justify-between gap-4 border-b border-zinc-200 dark:border-zinc-800 pb-4 sm:pb-6">
-        <h1 className="text-2xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100">
+      <header className="flex items-center justify-between gap-3 border-b border-zinc-200 dark:border-zinc-800 pb-4 sm:pb-6">
+        <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100 whitespace-nowrap">
           Habit Tracker
         </h1>
 
-        <div className="flex items-center gap-2 sm:gap-4">
+        <div className="flex items-center gap-2 sm:gap-3 shrink-0">
           <AuthButton />
           <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
           <DialogTrigger asChild>
-            <button onClick={openAddModal} className="p-2 rounded-full bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 transition-transform hover:scale-105 active:scale-95">
+            <button
+              onClick={openAddModal}
+              aria-label="Add habit"
+              className="p-2 rounded-full bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 transition-transform hover:scale-105 active:scale-95"
+            >
               <Plus size={20} />
             </button>
           </DialogTrigger>
@@ -333,6 +337,7 @@ export function HabitList() {
                               value={todayVal}
                               onChange={(e) => updateHabitDate(habit.id, new Date(), Number(e.target.value))}
                               onClick={(e) => e.stopPropagation()}
+                              aria-label={`${habit.name} progress for today`}
                               className="w-12 sm:w-16 px-2 py-1.5 text-sm border rounded-md dark:bg-zinc-800 dark:border-zinc-700 focus:outline-none focus:ring-2 focus:ring-zinc-500"
                             />
                             <span className="text-sm text-zinc-500 whitespace-nowrap hidden sm:inline">/ {habitTarget}</span>
@@ -340,6 +345,7 @@ export function HabitList() {
                         ) : (
                           <button
                             onClick={(e) => { e.stopPropagation(); e.preventDefault(); toggleHabitDate(habit.id, new Date(), habitTarget); }}
+                            aria-label={`Toggle ${habit.name} for today`}
                             className={cn(
                               "flex items-center justify-center gap-2 p-2 sm:px-3 sm:py-1.5 rounded-lg text-sm font-medium transition-colors",
                               isCompletedToday 
@@ -356,6 +362,7 @@ export function HabitList() {
                         <div className="hidden sm:flex items-center gap-1">
                           <button
                             onClick={(e) => { e.stopPropagation(); e.preventDefault(); openEditModal(habit); }}
+                            aria-label={`Edit ${habit.name}`}
                             className="p-2 text-zinc-400 hover:text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-950/30 rounded-lg transition-colors shrink-0"
                             title="Edit habit"
                           >
@@ -363,6 +370,7 @@ export function HabitList() {
                           </button>
                           <button
                             onClick={(e) => { e.stopPropagation(); e.preventDefault(); deleteHabit(habit.id); }}
+                            aria-label={`Delete ${habit.name}`}
                             className="p-2 text-zinc-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 rounded-lg transition-colors shrink-0"
                             title="Delete habit"
                           >

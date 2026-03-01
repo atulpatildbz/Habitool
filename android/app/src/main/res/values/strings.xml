@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Habitool</string>
+    <string name="title_activity_main">Habitool</string>
+    <string name="package_name">com.habitool.app</string>
+    <string name="custom_url_scheme">com.habitool.app</string>
+</resources>
