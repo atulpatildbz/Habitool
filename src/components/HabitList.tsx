@@ -1,12 +1,15 @@
 import { useHabits, Habit } from '../hooks/useHabits';
 import { ContributionGraph } from './ContributionGraph';
 import { CalendarView } from './CalendarView';
-import { Plus, Trash2, Check, Flame, Settings2, Pencil, icons } from 'lucide-react';
+import { Plus, Trash2, Check, Flame, Settings2, Pencil, MoreVertical, icons } from 'lucide-react';
 import { useState, FormEvent, useMemo, useEffect, useDeferredValue, UIEvent } from 'react';
 import { cn } from '../lib/utils';
 import { calculateStreaks } from '../lib/streaks';
 import { format } from 'date-fns';
 import { Dialog, DialogContent, DialogTrigger, DialogTitle } from './ui/dialog';
+import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
+
+import { AuthButton } from './AuthButton';
 
 const COLORS = [
   '#10b981', // emerald-500
@@ -133,12 +136,14 @@ export function HabitList() {
 
   return (
     <div className="max-w-5xl mx-auto p-4 sm:p-6 lg:p-8 flex flex-col gap-8">
-      <header className="flex items-center justify-between border-b border-zinc-200 dark:border-zinc-800 pb-6">
+      <header className="flex flex-wrap items-center justify-between gap-4 border-b border-zinc-200 dark:border-zinc-800 pb-4 sm:pb-6">
         <h1 className="text-2xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100">
           Habit Tracker
         </h1>
 
-        <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+        <div className="flex items-center gap-2 sm:gap-4">
+          <AuthButton />
+          <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
           <DialogTrigger asChild>
             <button onClick={openAddModal} className="p-2 rounded-full bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 transition-transform hover:scale-105 active:scale-95">
               <Plus size={20} />
@@ -264,6 +269,7 @@ export function HabitList() {
             </form>
           </DialogContent>
         </Dialog>
+        </div>
       </header>
 
       <div className="flex flex-col gap-8">
@@ -293,41 +299,43 @@ export function HabitList() {
               <Dialog key={habit.id}>
                 <DialogTrigger asChild>
                   <div 
-                    className="bg-white dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-800 p-6 shadow-sm overflow-hidden cursor-pointer transition-colors hover:border-zinc-300 dark:hover:border-zinc-700"
+                    className="bg-white dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-800 p-4 sm:p-6 shadow-sm overflow-hidden cursor-pointer transition-colors hover:border-zinc-300 dark:hover:border-zinc-700"
                   >
-                    <div className="flex flex-row items-center justify-between gap-4 mb-6">
-                      <div className="flex items-center gap-4 min-w-0">
+                    <div className="flex items-center justify-between gap-2 sm:gap-4 mb-4 sm:mb-6">
+                      <div className="flex items-center gap-3 sm:gap-4 min-w-0 flex-1">
                         <div 
-                          className="w-12 h-12 rounded-2xl shrink-0 flex items-center justify-center" 
+                          className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl shrink-0 flex items-center justify-center" 
                           style={{ 
                             backgroundColor: hexToRgba(habit.color, 0.15),
                             color: habit.color 
                           }}
                         >
-                          <IconComponent size={24} />
+                          <IconComponent className="w-5 h-5 sm:w-6 sm:h-6" />
                         </div>
-                        <h2 className="text-xl font-semibold text-zinc-900 dark:text-zinc-100 truncate">
-                          {habit.name}
-                        </h2>
-                        <div className="flex items-center gap-1.5 ml-1 text-sm text-zinc-500 bg-zinc-100 dark:bg-zinc-800 px-2 py-1 rounded-md shrink-0">
-                          <Flame size={14} className={streaks.current > 0 ? "text-orange-500" : "text-zinc-400"} />
-                          <span className={streaks.current > 0 ? "text-orange-600 dark:text-orange-400 font-medium" : ""}>
-                            {streaks.current} {habit.streakGoal ? `/ ${habit.streakGoal}` : ''}
-                          </span>
+                        <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3 min-w-0">
+                          <h2 className="text-lg sm:text-xl font-semibold text-zinc-900 dark:text-zinc-100 truncate">
+                            {habit.name}
+                          </h2>
+                          <div className="flex items-center gap-1.5 text-xs sm:text-sm text-zinc-500 bg-zinc-100 dark:bg-zinc-800 px-2 py-1 rounded-md shrink-0 w-fit">
+                            <Flame size={14} className={streaks.current > 0 ? "text-orange-500" : "text-zinc-400"} />
+                            <span className={streaks.current > 0 ? "text-orange-600 dark:text-orange-400 font-medium" : ""}>
+                              {streaks.current} {habit.streakGoal ? `/ ${habit.streakGoal}` : ''}
+                            </span>
+                          </div>
                         </div>
                       </div>
-                      <div className="flex items-center gap-2 shrink-0" onClick={(e) => { e.stopPropagation(); e.preventDefault(); }}>
+                      <div className="flex items-center gap-1 sm:gap-2 shrink-0" onClick={(e) => { e.stopPropagation(); e.preventDefault(); }}>
                         {habitTarget > 1 ? (
-                          <div className="flex items-center gap-2 mr-2 sm:mr-4">
+                          <div className="flex items-center gap-1 sm:gap-2 mr-1 sm:mr-4">
                             <input 
                               type="number" 
                               min="0"
                               value={todayVal}
                               onChange={(e) => updateHabitDate(habit.id, new Date(), Number(e.target.value))}
                               onClick={(e) => e.stopPropagation()}
-                              className="w-16 px-2 py-1.5 text-sm border rounded-md dark:bg-zinc-800 dark:border-zinc-700 focus:outline-none focus:ring-2 focus:ring-zinc-500"
+                              className="w-12 sm:w-16 px-2 py-1.5 text-sm border rounded-md dark:bg-zinc-800 dark:border-zinc-700 focus:outline-none focus:ring-2 focus:ring-zinc-500"
                             />
-                            <span className="text-sm text-zinc-500 whitespace-nowrap">/ {habitTarget}</span>
+                            <span className="text-sm text-zinc-500 whitespace-nowrap hidden sm:inline">/ {habitTarget}</span>
                           </div>
                         ) : (
                           <button
@@ -343,20 +351,51 @@ export function HabitList() {
                             <span className="hidden sm:inline">{isCompletedToday ? 'Completed' : 'Mark Today'}</span>
                           </button>
                         )}
-                        <button
-                          onClick={(e) => { e.stopPropagation(); e.preventDefault(); openEditModal(habit); }}
-                          className="p-2 text-zinc-400 hover:text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-950/30 rounded-lg transition-colors shrink-0"
-                          title="Edit habit"
-                        >
-                          <Pencil size={18} />
-                        </button>
-                        <button
-                          onClick={(e) => { e.stopPropagation(); e.preventDefault(); deleteHabit(habit.id); }}
-                          className="p-2 text-zinc-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 rounded-lg transition-colors shrink-0"
-                          title="Delete habit"
-                        >
-                          <Trash2 size={18} />
-                        </button>
+                        
+                        {/* Desktop Actions */}
+                        <div className="hidden sm:flex items-center gap-1">
+                          <button
+                            onClick={(e) => { e.stopPropagation(); e.preventDefault(); openEditModal(habit); }}
+                            className="p-2 text-zinc-400 hover:text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-950/30 rounded-lg transition-colors shrink-0"
+                            title="Edit habit"
+                          >
+                            <Pencil size={18} />
+                          </button>
+                          <button
+                            onClick={(e) => { e.stopPropagation(); e.preventDefault(); deleteHabit(habit.id); }}
+                            className="p-2 text-zinc-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 rounded-lg transition-colors shrink-0"
+                            title="Delete habit"
+                          >
+                            <Trash2 size={18} />
+                          </button>
+                        </div>
+
+                        {/* Mobile Actions */}
+                        <div className="sm:hidden">
+                          <Popover>
+                            <PopoverTrigger asChild>
+                              <button className="p-2 text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 rounded-lg transition-colors shrink-0">
+                                <MoreVertical size={18} />
+                              </button>
+                            </PopoverTrigger>
+                            <PopoverContent align="end" className="w-40 p-1">
+                              <button
+                                onClick={(e) => { e.stopPropagation(); e.preventDefault(); openEditModal(habit); }}
+                                className="w-full flex items-center gap-2 px-3 py-2 text-sm text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-md transition-colors"
+                              >
+                                <Pencil size={16} />
+                                Edit
+                              </button>
+                              <button
+                                onClick={(e) => { e.stopPropagation(); e.preventDefault(); deleteHabit(habit.id); }}
+                                className="w-full flex items-center gap-2 px-3 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 rounded-md transition-colors"
+                              >
+                                <Trash2 size={16} />
+                                Delete
+                              </button>
+                            </PopoverContent>
+                          </Popover>
+                        </div>
                       </div>
                     </div>
                     
