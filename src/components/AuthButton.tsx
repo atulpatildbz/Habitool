@@ -2,13 +2,21 @@ import { useAuthActions } from "@convex-dev/auth/react";
 import { App as CapacitorApp } from "@capacitor/app";
 import { Browser } from "@capacitor/browser";
 import { ConvexHttpClient } from "convex/browser";
-import { useConvexAuth } from "convex/react";
-import { Cloud, LogIn, LogOut } from "lucide-react";
+import { useConvexAuth, useQuery } from "convex/react";
+import { LogIn, LogOut, Settings } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { isNativeApp } from "../lib/platform";
+import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
+// @ts-ignore
+import { api } from "../../convex/_generated/api";
 
 const NATIVE_REDIRECT_URI = "habitool://auth";
 const OAUTH_VERIFIER_STORAGE_KEY_PREFIX = "__convexAuthOAuthVerifier_";
+type AuthUser = {
+  name?: string | null;
+  email?: string | null;
+  image?: string | null;
+} | null;
 
 export function AuthButton() {
   const convexUrl = import.meta.env.VITE_CONVEX_URL;
@@ -34,9 +42,62 @@ export function AuthButton() {
   return <AuthButtonInner />;
 }
 
+function AccountMenu({ user, onSignOut }: { user: AuthUser | undefined; onSignOut: () => void }) {
+  const [open, setOpen] = useState(false);
+  const displayName = user?.name?.trim() || user?.email?.trim() || "Account";
+  const initial = displayName.charAt(0).toUpperCase();
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <button
+          type="button"
+          className="h-10 w-10 rounded-full border border-zinc-200 dark:border-zinc-700 overflow-hidden bg-zinc-200 dark:bg-zinc-800 flex items-center justify-center hover:border-zinc-300 dark:hover:border-zinc-500 transition-colors"
+          title={displayName}
+          aria-label="Account menu"
+        >
+          {user?.image ? (
+            <img src={user.image} alt="Google account avatar" className="h-full w-full object-cover" />
+          ) : (
+            <span className="text-sm font-semibold text-zinc-700 dark:text-zinc-200">{initial || "A"}</span>
+          )}
+        </button>
+      </PopoverTrigger>
+      <PopoverContent
+        align="end"
+        sideOffset={8}
+        className="w-44 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-1"
+      >
+        <button
+          type="button"
+          onClick={() => setOpen(false)}
+          className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-zinc-700 dark:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
+          aria-label="Settings"
+        >
+          <Settings size={14} />
+          <span>Settings</span>
+        </button>
+        <button
+          type="button"
+          onClick={() => {
+            setOpen(false);
+            onSignOut();
+          }}
+          className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-zinc-700 dark:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
+          aria-label="Log out"
+        >
+          <LogOut size={14} />
+          <span>Log out</span>
+        </button>
+      </PopoverContent>
+    </Popover>
+  );
+}
+
 function NativeSyncButton() {
   const { isAuthenticated, isLoading } = useConvexAuth();
   const { signIn, signOut } = useAuthActions();
+  const currentUser = useQuery(api.users.getCurrent) as AuthUser | undefined;
   const [isNativeGoogleSigningIn, setIsNativeGoogleSigningIn] = useState(false);
   const convexUrl = import.meta.env.VITE_CONVEX_URL as string | undefined;
 
@@ -104,30 +165,14 @@ function NativeSyncButton() {
   if (isLoading || isNativeGoogleSigningIn) {
     return (
       <div
-        className="h-10 w-24 animate-pulse rounded-full bg-zinc-200 dark:bg-zinc-800"
+        className="h-10 w-10 animate-pulse rounded-full bg-zinc-200 dark:bg-zinc-800"
         aria-label="Loading auth state"
       />
     );
   }
 
   if (isAuthenticated) {
-    return (
-      <div className="flex items-center gap-2">
-        <div className="inline-flex items-center gap-1.5 px-2.5 py-2 rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-300 text-xs sm:text-sm font-medium">
-          <Cloud size={14} />
-          <span className="hidden sm:inline">Sync On</span>
-        </div>
-        <button
-          onClick={() => signOut()}
-          className="inline-flex items-center gap-1.5 px-2.5 py-2 rounded-full bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-200 text-xs sm:text-sm font-medium hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors"
-          title="Disable sync"
-          aria-label="Disable sync"
-        >
-          <LogOut size={14} />
-          <span className="hidden sm:inline">Disable</span>
-        </button>
-      </div>
-    );
+    return <AccountMenu user={currentUser} onSignOut={() => signOut()} />;
   }
 
   return (
@@ -146,34 +191,19 @@ function NativeSyncButton() {
 function AuthButtonInner() {
   const { isAuthenticated, isLoading } = useConvexAuth();
   const { signIn, signOut } = useAuthActions();
+  const currentUser = useQuery(api.users.getCurrent) as AuthUser | undefined;
 
   if (isLoading) {
     return (
       <div
-        className="h-10 w-24 sm:w-36 animate-pulse rounded-full bg-zinc-200 dark:bg-zinc-800"
+        className="h-10 w-10 animate-pulse rounded-full bg-zinc-200 dark:bg-zinc-800"
         aria-label="Loading auth state"
       />
     );
   }
 
   if (isAuthenticated) {
-    return (
-      <div className="flex items-center gap-2">
-        <div className="inline-flex items-center gap-2 px-2.5 sm:px-3 py-2 rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-300 text-xs sm:text-sm font-medium">
-          <span className="w-2 h-2 rounded-full bg-emerald-500" />
-          <span className="hidden sm:inline">Signed In</span>
-        </div>
-        <button
-          onClick={() => signOut()}
-          className="inline-flex items-center gap-2 px-2.5 sm:px-3 py-2 rounded-full bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-200 text-xs sm:text-sm font-medium hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors"
-          title="Log out"
-          aria-label="Log out"
-        >
-          <LogOut size={16} />
-          <span className="hidden sm:inline">Log Out</span>
-        </button>
-      </div>
-    );
+    return <AccountMenu user={currentUser} onSignOut={() => signOut()} />;
   }
 
   return (
