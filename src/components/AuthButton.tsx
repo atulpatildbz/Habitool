@@ -205,6 +205,7 @@ function AuthButtonInner() {
   const { signIn, signOut } = useAuthActions();
   const currentUser = useQuery(api.users.getCurrent) as AuthUser | undefined;
   const [isHandlingOAuthCode, setIsHandlingOAuthCode] = useState(false);
+  const [isWebGoogleSigningIn, setIsWebGoogleSigningIn] = useState(false);
   const [showNotAllowedToast, setShowNotAllowedToast] = useState(false);
   const hasHandledCodeRef = useRef(false);
 
@@ -239,6 +240,18 @@ function AuthButtonInner() {
     const timer = window.setTimeout(() => setShowNotAllowedToast(false), 10000);
     return () => window.clearTimeout(timer);
   }, [showNotAllowedToast]);
+
+  const startWebGoogleSignIn = async () => {
+    if (isWebGoogleSigningIn) return;
+    setIsWebGoogleSigningIn(true);
+    try {
+      await signIn("google");
+    } catch (error) {
+      console.error("Failed to start web Google sign-in", error);
+    } finally {
+      setIsWebGoogleSigningIn(false);
+    }
+  };
 
   if (isLoading || isHandlingOAuthCode) {
     return (
@@ -275,13 +288,24 @@ function AuthButtonInner() {
         </div>
       )}
       <button
-        onClick={() => signIn("google")}
-        className="inline-flex items-center gap-2 px-2.5 sm:px-3 py-2 rounded-full bg-blue-600 text-white text-xs sm:text-sm font-medium hover:bg-blue-700 transition-colors"
+        onClick={startWebGoogleSignIn}
+        disabled={isWebGoogleSigningIn}
+        className="inline-flex items-center gap-2 px-2.5 sm:px-3 py-2 rounded-full bg-blue-600 text-white text-xs sm:text-sm font-medium hover:bg-blue-700 disabled:opacity-70 disabled:cursor-not-allowed transition-colors"
         title="Sign in with Google"
         aria-label="Sign in with Google"
+        aria-busy={isWebGoogleSigningIn}
       >
-        <LogIn size={16} />
-        <span className="hidden sm:inline">Sign In with Google</span>
+        {isWebGoogleSigningIn ? (
+          <>
+            <span className="h-4 w-4 rounded-full border-2 border-white/80 border-t-transparent animate-spin" />
+            <span className="hidden sm:inline">Redirecting...</span>
+          </>
+        ) : (
+          <>
+            <LogIn size={16} />
+            <span className="hidden sm:inline">Sign In with Google</span>
+          </>
+        )}
       </button>
     </>
   );
