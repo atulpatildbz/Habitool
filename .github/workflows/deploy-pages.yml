@@ -16,6 +16,8 @@ concurrency:
 
 jobs:
   build:
+    environment:
+      name: github-pages
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -33,7 +35,7 @@ jobs:
       - name: Build
         run: npm run build
         env:
-          VITE_CONVEX_URL: ${{ vars.VITE_CONVEX_URL }}
+          VITE_CONVEX_URL: ${{ secrets.VITE_CONVEX_URL }}
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
