@@ -2,22 +2,32 @@
 <img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
 </div>
 
-# Run and deploy your AI Studio app
+# Habitool
 
-This contains everything you need to run your app locally.
+Habit tracker with local storage + Convex sync (Google sign-in).
 
-View your app in AI Studio: https://aistudio-preprod.corp.google.com/apps/cff20585-efd7-41eb-9589-432609a9256f
+## Prerequisites
+
+- Node.js 20+
+- Convex account/project
 
 ## Run Locally
 
-**Prerequisites:**  Node.js
-
-
 1. Install dependencies:
    `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
+2. Set frontend env in `.env.local`:
+   `VITE_CONVEX_URL="https://<your-dev-deployment>.convex.cloud"`
+3. Start Convex dev (in a separate terminal):
+   `npx convex dev`
+4. Run the app:
    `npm run dev`
+
+## Convex Auth Environment (Backend)
+
+Set these in Convex deployment settings (dev and prod as needed):
+- `SITE_URL` (your web app origin, e.g. `https://<user>.github.io/<repo>`)
+- `AUTH_GOOGLE_ID`
+- `AUTH_GOOGLE_SECRET`
 
 ## Mobile App (Capacitor)
 
@@ -50,7 +60,43 @@ Debug APK path:
 
 `npm run cap:open:android`
 
-### Notes
+## Deploy Web App (GitHub Pages)
+
+This repo deploys via `.github/workflows/deploy-pages.yml` on push to `main`.
+
+Required GitHub configuration:
+1. In `Settings -> Environments -> github-pages -> Secrets`, set:
+   `VITE_CONVEX_URL=https://<your-prod-deployment>.convex.cloud`
+2. Ensure Pages is configured to use GitHub Actions.
+3. Push to `main` (or run the workflow manually).
+
+## Email Allowlist (DB-backed)
+
+Allowlist is enforced in Convex before session creation.
+
+Deploy backend changes to prod:
+`npx convex deploy -y`
+
+List:
+- Dev: `npm run allowlist:list:dev`
+- Prod: `npm run allowlist:list:prod`
+
+Grant access:
+- Dev: `npm run allowlist:grant:dev -- '{"email":"user@example.com","role":"user"}'`
+- Prod: `npm run allowlist:grant:prod -- '{"email":"user@example.com","role":"user"}'`
+
+Promote/demote role:
+- Dev: `npm run allowlist:role:dev -- '{"email":"user@example.com","role":"admin"}'`
+- Prod: `npm run allowlist:role:prod -- '{"email":"user@example.com","role":"admin"}'`
+
+Revoke access:
+- Dev: `npm run allowlist:revoke:dev -- '{"email":"user@example.com"}'`
+- Prod: `npm run allowlist:revoke:prod -- '{"email":"user@example.com"}'`
+
+Bootstrap first admin in prod:
+`npm run allowlist:grant:prod -- '{"email":"you@example.com","role":"admin"}'`
+
+## Notes
 
 - Web app uses Google sign-in with Convex.
 - Android app supports Google sign-in via system browser + deep link (`habitool://auth`) for Convex sync.

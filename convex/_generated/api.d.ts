@@ -8,6 +8,7 @@
  * @module
  */
 
+import type * as allowlist from "../allowlist.js";
 import type * as auth from "../auth.js";
 import type * as habits from "../habits.js";
 import type * as http from "../http.js";
@@ -21,6 +22,7 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
+  allowlist: typeof allowlist;
   auth: typeof auth;
   habits: typeof habits;
   http: typeof http;

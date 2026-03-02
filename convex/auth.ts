@@ -37,5 +37,20 @@ export const { auth, signIn, signOut, store, isAuthenticated } = convexAuth({
         `Invalid \`redirectTo\` ${redirectTo} for configured SITE_URL: ${siteUrl}`,
       );
     },
+    async beforeSessionCreation(ctx, { userId }) {
+      const user = await ctx.db.get(userId);
+      const email = typeof user?.email === "string" ? user.email.toLowerCase() : "";
+      const db = (ctx as any).db;
+      const allowed = email
+        ? await db
+            .query("allowedEmails")
+            .withIndex("by_email", (q) => q.eq("email", email))
+            .first()
+        : null;
+
+      if (!allowed) {
+        throw new Error("This email is not allowed to access this app.");
+      }
+    },
   },
 });

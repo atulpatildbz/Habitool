@@ -20,7 +20,15 @@
     "android:build:debug": "npm run cap:android && ./scripts/android-build-debug.sh",
     "android:install:debug": "adb wait-for-device && adb install -r android/app/build/outputs/apk/debug/app-debug.apk",
     "android:launch": "adb shell monkey -p com.habitool.app -c android.intent.category.LAUNCHER 1",
-    "android:run:debug": "npm run android:build:debug && npm run android:install:debug && npm run android:launch"
+    "android:run:debug": "npm run android:build:debug && npm run android:install:debug && npm run android:launch",
+    "allowlist:list:dev": "npx convex run internal.allowlist.list",
+    "allowlist:list:prod": "npx convex run --prod internal.allowlist.list",
+    "allowlist:grant:dev": "npx convex run internal.allowlist.grant",
+    "allowlist:grant:prod": "npx convex run --prod internal.allowlist.grant",
+    "allowlist:revoke:dev": "npx convex run internal.allowlist.revoke",
+    "allowlist:revoke:prod": "npx convex run --prod internal.allowlist.revoke",
+    "allowlist:role:dev": "npx convex run internal.allowlist.setRole",
+    "allowlist:role:prod": "npx convex run --prod internal.allowlist.setRole"
   },
   "dependencies": {
     "@auth/core": "^0.37.4",

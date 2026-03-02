@@ -3,8 +3,8 @@ import { App as CapacitorApp } from "@capacitor/app";
 import { Browser } from "@capacitor/browser";
 import { ConvexHttpClient } from "convex/browser";
 import { useConvexAuth, useQuery } from "convex/react";
-import { LogIn, LogOut, Settings } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { LogIn, LogOut, Settings, X } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { isNativeApp } from "../lib/platform";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
 // @ts-ignore
@@ -12,11 +12,23 @@ import { api } from "../../convex/_generated/api";
 
 const NATIVE_REDIRECT_URI = "habitool://auth";
 const OAUTH_VERIFIER_STORAGE_KEY_PREFIX = "__convexAuthOAuthVerifier_";
+const NOT_ALLOWED_TOAST_MESSAGE =
+  "This email is currently not allowed to use this app. Reach out to the developer to allow access.";
 type AuthUser = {
   name?: string | null;
   email?: string | null;
   image?: string | null;
 } | null;
+
+function extractErrorText(error: unknown): string {
+  if (error instanceof Error) return error.message;
+  if (typeof error === "string") return error;
+  try {
+    return JSON.stringify(error);
+  } catch {
+    return "";
+  }
+}
 
 export function AuthButton() {
   const convexUrl = import.meta.env.VITE_CONVEX_URL;
@@ -192,8 +204,43 @@ function AuthButtonInner() {
   const { isAuthenticated, isLoading } = useConvexAuth();
   const { signIn, signOut } = useAuthActions();
   const currentUser = useQuery(api.users.getCurrent) as AuthUser | undefined;
+  const [isHandlingOAuthCode, setIsHandlingOAuthCode] = useState(false);
+  const [showNotAllowedToast, setShowNotAllowedToast] = useState(false);
+  const hasHandledCodeRef = useRef(false);
 
-  if (isLoading) {
+  useEffect(() => {
+    if (isNativeApp() || hasHandledCodeRef.current) return;
+
+    const url = new URL(window.location.href);
+    const code = url.searchParams.get("code");
+    if (!code) return;
+
+    hasHandledCodeRef.current = true;
+    setIsHandlingOAuthCode(true);
+    url.searchParams.delete("code");
+    window.history.replaceState({}, "", `${url.pathname}${url.search}${url.hash}`);
+
+    void (async () => {
+      try {
+        await (signIn as any)(undefined, { code });
+      } catch (error) {
+        const errorText = extractErrorText(error).toLowerCase();
+        if (errorText.includes("not allowed")) {
+          setShowNotAllowedToast(true);
+        }
+      } finally {
+        setIsHandlingOAuthCode(false);
+      }
+    })();
+  }, [signIn]);
+
+  useEffect(() => {
+    if (!showNotAllowedToast) return;
+    const timer = window.setTimeout(() => setShowNotAllowedToast(false), 10000);
+    return () => window.clearTimeout(timer);
+  }, [showNotAllowedToast]);
+
+  if (isLoading || isHandlingOAuthCode) {
     return (
       <div
         className="h-10 w-10 animate-pulse rounded-full bg-zinc-200 dark:bg-zinc-800"
@@ -207,14 +254,35 @@ function AuthButtonInner() {
   }
 
   return (
-    <button
-      onClick={() => signIn("google")}
-      className="inline-flex items-center gap-2 px-2.5 sm:px-3 py-2 rounded-full bg-blue-600 text-white text-xs sm:text-sm font-medium hover:bg-blue-700 transition-colors"
-      title="Sign in with Google"
-      aria-label="Sign in with Google"
-    >
-      <LogIn size={16} />
-      <span className="hidden sm:inline">Sign In with Google</span>
-    </button>
+    <>
+      {showNotAllowedToast && (
+        <div
+          className="fixed top-4 left-1/2 -translate-x-1/2 z-50 w-[min(92vw,520px)] rounded-xl border border-red-300 bg-red-50 text-red-900 px-4 py-3 shadow-lg"
+          role="alert"
+          aria-live="assertive"
+        >
+          <div className="flex items-start gap-3">
+            <p className="text-sm leading-5">{NOT_ALLOWED_TOAST_MESSAGE}</p>
+            <button
+              type="button"
+              onClick={() => setShowNotAllowedToast(false)}
+              className="ml-auto inline-flex h-6 w-6 items-center justify-center rounded-md hover:bg-red-100 transition-colors"
+              aria-label="Dismiss access denied message"
+            >
+              <X size={16} />
+            </button>
+          </div>
+        </div>
+      )}
+      <button
+        onClick={() => signIn("google")}
+        className="inline-flex items-center gap-2 px-2.5 sm:px-3 py-2 rounded-full bg-blue-600 text-white text-xs sm:text-sm font-medium hover:bg-blue-700 transition-colors"
+        title="Sign in with Google"
+        aria-label="Sign in with Google"
+      >
+        <LogIn size={16} />
+        <span className="hidden sm:inline">Sign In with Google</span>
+      </button>
+    </>
   );
 }
