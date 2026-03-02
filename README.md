@@ -58,6 +58,8 @@ Use the `:prod` scripts so mobile bundles point to Convex production:
 Current prod URL baked by these scripts:
 `https://accurate-aardvark-130.convex.cloud`
 
+Important: use `cap:*` scripts (or `build:mobile*`) for mobile builds. They force `VITE_BASE_PATH=./` so Android/iOS WebView can load bundled assets correctly.
+
 ### Android CLI (No Android Studio)
 
 Requires JDK 21 (preferred) or JDK 17. JDK 25 is not supported by this Gradle stack.
