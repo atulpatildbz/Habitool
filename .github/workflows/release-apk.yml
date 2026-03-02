@@ -48,7 +48,7 @@ jobs:
         run: npm ci
 
       - name: Sync Capacitor Android project
-        run: npm run cap:android
+        run: npm run cap:android:prod
 
       - name: Build debug APK
         run: |

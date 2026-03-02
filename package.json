@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite --port=3000 --host=0.0.0.0",
     "build": "vite build",
+    "build:prod": "VITE_CONVEX_URL=https://accurate-aardvark-130.convex.cloud vite build",
     "preview": "vite preview",
     "clean": "rm -rf dist",
     "lint": "tsc --noEmit",
@@ -14,6 +15,9 @@
     "cap:sync": "npm run build && npx cap sync",
     "cap:android": "npm run build && npx cap sync android",
     "cap:ios": "npm run build && npx cap sync ios",
+    "cap:sync:prod": "npm run build:prod && npx cap sync",
+    "cap:android:prod": "npm run build:prod && npx cap sync android",
+    "cap:ios:prod": "npm run build:prod && npx cap sync ios",
     "cap:open:android": "npx cap open android",
     "cap:open:ios": "npx cap open ios",
     "android:devices": "adb devices",

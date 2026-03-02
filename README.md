@@ -44,6 +44,20 @@ This project is configured with Capacitor.
 3. iOS (macOS + Xcode):
    `npm run cap:open:ios`
 
+### Use Convex Prod in Mobile Builds
+
+Use the `:prod` scripts so mobile bundles point to Convex production:
+
+- Sync both platforms with prod URL:
+  `npm run cap:sync:prod`
+- Android with prod URL:
+  `npm run cap:android:prod`
+- iOS with prod URL:
+  `npm run cap:ios:prod`
+
+Current prod URL baked by these scripts:
+`https://accurate-aardvark-130.convex.cloud`
+
 ### Android CLI (No Android Studio)
 
 Requires JDK 21 (preferred) or JDK 17. JDK 25 is not supported by this Gradle stack.
@@ -73,6 +87,8 @@ Required GitHub configuration:
    `VITE_CONVEX_URL=https://<your-prod-deployment>.convex.cloud`
 2. Ensure Pages is configured to use GitHub Actions.
 3. Push to `main` (or run the workflow manually).
+
+Note: no GitHub Actions workflow changes are required for Capacitor mobile builds. Mobile builds use your local `npm run cap:*` commands.
 
 ## Email Allowlist (DB-backed)
 
