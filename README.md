@@ -29,6 +29,10 @@ Set these in Convex deployment settings (dev and prod as needed):
 - `AUTH_GOOGLE_ID`
 - `AUTH_GOOGLE_SECRET`
 
+If Google sign-in redirects to `localhost` in production, check your Convex **production** environment values:
+- `SITE_URL` must be your live web origin (not `http://localhost:3000`)
+- `APP_URL` can also be set as a fallback origin
+
 ## Mobile App (Capacitor)
 
 This project is configured with Capacitor.

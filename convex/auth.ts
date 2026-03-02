@@ -4,15 +4,40 @@ import { Anonymous } from "@convex-dev/auth/providers/Anonymous";
 
 const MOBILE_REDIRECT_URI = "habitool://auth";
 
+function normalizeUrl(value?: string): string | null {
+  if (!value) return null;
+  return value.replace(/\/$/, "");
+}
+
+function isLoopbackUrl(value: string): boolean {
+  try {
+    const url = new URL(value);
+    return url.hostname === "localhost" || url.hostname === "127.0.0.1";
+  } catch {
+    return false;
+  }
+}
+
+function resolveSiteUrl(): string {
+  const candidates = [normalizeUrl(process.env.SITE_URL), normalizeUrl(process.env.APP_URL)].filter(
+    (value): value is string => Boolean(value),
+  );
+
+  const nonLoopback = candidates.find((value) => !isLoopbackUrl(value));
+  const resolved = nonLoopback ?? candidates[0];
+
+  if (!resolved) {
+    throw new Error("Missing environment variable `SITE_URL` (or `APP_URL` as fallback)");
+  }
+
+  return resolved;
+}
+
 export const { auth, signIn, signOut, store, isAuthenticated } = convexAuth({
   providers: [Google, Anonymous],
   callbacks: {
     async redirect({ redirectTo }) {
-      const siteUrl = process.env.SITE_URL?.replace(/\/$/, "");
-
-      if (!siteUrl) {
-        throw new Error("Missing environment variable `SITE_URL`");
-      }
+      const siteUrl = resolveSiteUrl();
 
       if (redirectTo.startsWith("?") || redirectTo.startsWith("/")) {
         return `${siteUrl}${redirectTo}`;
