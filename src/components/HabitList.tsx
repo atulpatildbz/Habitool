@@ -342,17 +342,32 @@ export function HabitList() {
                       </div>
                       <div className="flex items-center gap-1 sm:gap-2 shrink-0" onClick={(e) => { e.stopPropagation(); e.preventDefault(); }}>
                         {habitTarget > 1 ? (
-                          <div className="flex items-center gap-1 sm:gap-2 mr-1 sm:mr-4">
-                            <input 
-                              type="number" 
-                              min="0"
-                              value={todayVal}
-                              onChange={(e) => updateHabitDate(habit.id, new Date(), Number(e.target.value))}
-                              onClick={(e) => e.stopPropagation()}
-                              aria-label={`${habit.name} progress for today`}
-                              className="w-12 sm:w-16 px-2 py-1.5 text-sm border rounded-md dark:bg-zinc-800 dark:border-zinc-700 focus:outline-none focus:ring-2 focus:ring-zinc-500"
-                            />
-                            <span className="text-sm text-zinc-500 whitespace-nowrap hidden sm:inline">/ {habitTarget}</span>
+                          <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-0.5 text-sm" onClick={(e) => e.stopPropagation()}>
+                              <input
+                                type="number"
+                                min="0"
+                                value={todayVal || ''}
+                                placeholder="0"
+                                onChange={(e) => updateHabitDate(habit.id, new Date(), Number(e.target.value))}
+                                onClick={(e) => e.stopPropagation()}
+                                aria-label={`${habit.name} progress for today`}
+                                className="w-8 text-center font-medium text-zinc-700 dark:text-zinc-300 bg-transparent border-b border-zinc-300 dark:border-zinc-600 focus:outline-none focus:border-zinc-900 dark:focus:border-zinc-100 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                              />
+                              <span className="text-zinc-400 dark:text-zinc-500">/{habitTarget}</span>
+                            </div>
+                            <button
+                              onClick={(e) => { e.stopPropagation(); e.preventDefault(); toggleHabitDate(habit.id, new Date(), habitTarget); }}
+                              aria-label={`Mark ${habit.name} complete for today`}
+                              className={cn(
+                                "flex items-center justify-center p-2 rounded-lg text-sm font-medium transition-colors",
+                                isCompletedToday
+                                  ? "bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900"
+                                  : "bg-zinc-100 text-zinc-600 hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-400 dark:hover:bg-zinc-700"
+                              )}
+                            >
+                              <Check size={18} className={cn(isCompletedToday ? "opacity-100" : "opacity-40")} />
+                            </button>
                           </div>
                         ) : (
                           <button
@@ -360,13 +375,12 @@ export function HabitList() {
                             aria-label={`Toggle ${habit.name} for today`}
                             className={cn(
                               "flex items-center justify-center gap-2 p-2 sm:px-3 sm:py-1.5 rounded-lg text-sm font-medium transition-colors",
-                              isCompletedToday 
-                                ? "bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900" 
+                              isCompletedToday
+                                ? "bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900"
                                 : "bg-zinc-100 text-zinc-600 hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-400 dark:hover:bg-zinc-700"
                             )}
                           >
-                            <Check size={18} className={cn(isCompletedToday ? "opacity-100" : "opacity-50")} />
-                            <span className="hidden sm:inline">{isCompletedToday ? 'Completed' : 'Mark Today'}</span>
+                            <Check size={18} className={cn(isCompletedToday ? "opacity-100" : "opacity-40")} />
                           </button>
                         )}
                         
