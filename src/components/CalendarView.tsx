@@ -13,6 +13,8 @@ interface CalendarViewProps {
   logs: { [dateString: string]: number };
   onToggleDate: (date: Date) => void;
   onUpdateDate: (date: Date, value: number) => void;
+  currentMonth: Date;
+  onMonthChange: (month: Date) => void;
 }
 
 const hexToRgb = (hex: string) => {
@@ -20,8 +22,7 @@ const hexToRgb = (hex: string) => {
   return result ? `${parseInt(result[1], 16)}, ${parseInt(result[2], 16)}, ${parseInt(result[3], 16)}` : '0, 0, 0';
 };
 
-export function CalendarView({ habit, logs, onToggleDate, onUpdateDate }: CalendarViewProps) {
-  const [currentMonth, setCurrentMonth] = useState(new Date());
+export function CalendarView({ habit, logs, onToggleDate, onUpdateDate, currentMonth, onMonthChange }: CalendarViewProps) {
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
 
   const monthStart = startOfMonth(currentMonth);
@@ -51,10 +52,10 @@ export function CalendarView({ habit, logs, onToggleDate, onUpdateDate }: Calend
           {format(currentMonth, 'MMMM yyyy')}
         </h3>
         <div className="flex gap-2">
-          <button onClick={() => setCurrentMonth(subMonths(currentMonth, 1))} className="p-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-md transition-colors">
+          <button onClick={() => onMonthChange(subMonths(currentMonth, 1))} className="p-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-md transition-colors">
             <ChevronLeft size={20} />
           </button>
-          <button onClick={() => setCurrentMonth(addMonths(currentMonth, 1))} className="p-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-md transition-colors">
+          <button onClick={() => onMonthChange(addMonths(currentMonth, 1))} className="p-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-md transition-colors">
             <ChevronRight size={20} />
           </button>
         </div>

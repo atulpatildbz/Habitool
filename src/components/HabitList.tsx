@@ -2,7 +2,7 @@ import { useHabits, Habit } from '../hooks/useHabits';
 import { ContributionGraph } from './ContributionGraph';
 import { RecentDaysGraph } from './RecentDaysGraph';
 import { CalendarView } from './CalendarView';
-import { Plus, Trash2, Check, Flame, Settings2, Pencil, MoreVertical, ChevronUp, icons } from 'lucide-react';
+import { Plus, Trash2, Check, Flame, Settings2, Pencil, EllipsisVertical, ChevronUp, icons } from 'lucide-react';
 import { useState, FormEvent, useMemo, useEffect, useDeferredValue, UIEvent } from 'react';
 import { cn } from '../lib/utils';
 import { calculateStreaks } from '../lib/streaks';
@@ -11,6 +11,7 @@ import { Dialog, DialogContent, DialogTrigger, DialogTitle } from './ui/dialog';
 import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
 
 import { AuthButton } from './AuthButton';
+import { HabitStats } from './HabitStats';
 
 const COLORS = [
   '#10b981', // emerald-500
@@ -49,6 +50,7 @@ export function HabitList() {
   const [editingHabitId, setEditingHabitId] = useState<string | null>(null);
   const [graphViewMode, setGraphViewMode] = useState<GraphViewMode>('year');
   const [recentDays, setRecentDays] = useState<RecentDayOption>(5);
+  const [dialogMonth, setDialogMonth] = useState(() => new Date());
 
   useEffect(() => {
     fetch('https://unpkg.com/lucide-static@latest/tags.json')
@@ -307,7 +309,7 @@ export function HabitList() {
             };
 
             return (
-              <Dialog key={habit.id}>
+              <Dialog key={habit.id} onOpenChange={(open) => { if (open) setDialogMonth(new Date()); }}>
                 <DialogTrigger asChild>
                   <div 
                     className="bg-white dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-800 p-4 sm:p-6 shadow-sm overflow-hidden cursor-pointer transition-colors hover:border-zinc-300 dark:hover:border-zinc-700"
@@ -384,52 +386,33 @@ export function HabitList() {
                           </button>
                         )}
                         
-                        {/* Desktop Actions */}
-                        <div className="hidden sm:flex items-center gap-1">
-                          <button
-                            onClick={(e) => { e.stopPropagation(); e.preventDefault(); openEditModal(habit); }}
-                            aria-label={`Edit ${habit.name}`}
-                            className="p-2 text-zinc-400 hover:text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-950/30 rounded-lg transition-colors shrink-0"
-                            title="Edit habit"
-                          >
-                            <Pencil size={18} />
-                          </button>
-                          <button
-                            onClick={(e) => { e.stopPropagation(); e.preventDefault(); deleteHabit(habit.id); }}
-                            aria-label={`Delete ${habit.name}`}
-                            className="p-2 text-zinc-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 rounded-lg transition-colors shrink-0"
-                            title="Delete habit"
-                          >
-                            <Trash2 size={18} />
-                          </button>
-                        </div>
-
-                        {/* Mobile Actions */}
-                        <div className="sm:hidden">
-                          <Popover>
-                            <PopoverTrigger asChild>
-                              <button className="p-2 text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 rounded-lg transition-colors shrink-0">
-                                <MoreVertical size={18} />
-                              </button>
-                            </PopoverTrigger>
-                            <PopoverContent align="end" className="w-40 p-1">
-                              <button
-                                onClick={(e) => { e.stopPropagation(); e.preventDefault(); openEditModal(habit); }}
-                                className="w-full flex items-center gap-2 px-3 py-2 text-sm text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-md transition-colors"
-                              >
-                                <Pencil size={16} />
-                                Edit
-                              </button>
-                              <button
-                                onClick={(e) => { e.stopPropagation(); e.preventDefault(); deleteHabit(habit.id); }}
-                                className="w-full flex items-center gap-2 px-3 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 rounded-md transition-colors"
-                              >
-                                <Trash2 size={16} />
-                                Delete
-                              </button>
-                            </PopoverContent>
-                          </Popover>
-                        </div>
+                        {/* More menu */}
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <button
+                              aria-label={`More options for ${habit.name}`}
+                              className="p-2 text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg transition-colors shrink-0"
+                            >
+                              <EllipsisVertical size={18} />
+                            </button>
+                          </PopoverTrigger>
+                          <PopoverContent align="end" className="w-40 p-1">
+                            <button
+                              onClick={(e) => { e.stopPropagation(); e.preventDefault(); openEditModal(habit); }}
+                              className="w-full flex items-center gap-2 px-3 py-2 text-sm text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-md transition-colors"
+                            >
+                              <Pencil size={16} />
+                              Edit
+                            </button>
+                            <button
+                              onClick={(e) => { e.stopPropagation(); e.preventDefault(); deleteHabit(habit.id); }}
+                              className="w-full flex items-center gap-2 px-3 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 rounded-md transition-colors"
+                            >
+                              <Trash2 size={16} />
+                              Delete
+                            </button>
+                          </PopoverContent>
+                        </Popover>
                       </div>
                     </div>
                     
@@ -451,14 +434,17 @@ export function HabitList() {
                     </div>
                   </div>
                 </DialogTrigger>
-                <DialogContent className="w-[95vw] max-w-sm p-6 rounded-2xl">
+                <DialogContent className="w-[95vw] max-w-sm p-6 rounded-2xl max-h-[90vh] overflow-y-auto">
                   <DialogTitle className="sr-only">Track {habit.name}</DialogTitle>
                   <CalendarView
                     habit={habit}
                     logs={logs[habit.id] || {}}
                     onToggleDate={(date) => toggleHabitDate(habit.id, date, habitTarget)}
                     onUpdateDate={(date, value) => updateHabitDate(habit.id, date, value)}
+                    currentMonth={dialogMonth}
+                    onMonthChange={setDialogMonth}
                   />
+                  <HabitStats habit={habit} logs={logs[habit.id] || {}} selectedMonth={dialogMonth} />
                 </DialogContent>
               </Dialog>
             );
