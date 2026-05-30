@@ -12,8 +12,12 @@ function logKey(habitId: string, date: string) {
 }
 
 export function useConvexHabits() {
-  const habitsRaw = useQuery(api.habits.get) || [];
-  const logsRaw = useQuery(api.logs.get) || [];
+  const habitsResult = useQuery(api.habits.get);
+  const logsResult = useQuery(api.logs.get);
+  // `undefined` means the subscription hasn't resolved yet; `[]` means loaded-empty.
+  const loaded = habitsResult !== undefined;
+  const habitsRaw = habitsResult || [];
+  const logsRaw = logsResult || [];
   const [pendingLogValues, setPendingLogValues] = useState<Record<string, number>>({});
   const pendingTimersRef = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
 
@@ -153,5 +157,5 @@ export function useConvexHabits() {
     }, LOG_UPDATE_DEBOUNCE_MS);
   };
 
-  return { habits, logs, addHabit, deleteHabit, updateHabit, toggleHabitDate, updateHabitDate };
+  return { habits, logs, loaded, addHabit, deleteHabit, updateHabit, toggleHabitDate, updateHabitDate };
 }
